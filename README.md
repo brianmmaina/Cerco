@@ -61,3 +61,7 @@ https://github.com/your-org/cerco/issues
 ## Contact Us
 Brian Maina – github.com/brianmmaina – bmmaina@bu.edu  
 Anthony Qin – github.com/anthonyq7 – a.j.qin@wustl.edu  
+
+## License
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
