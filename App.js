@@ -7,6 +7,8 @@ import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import VerifyEmailScreen from './src/screens/VerifyEmailScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import CalendarScreen from './src/screens/CalendarScreen';
+import FeedScreen     from './src/screens/FeedScreen';
 
 const Stack = createNativeStackNavigator();
 
