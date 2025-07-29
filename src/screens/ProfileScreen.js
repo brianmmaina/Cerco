@@ -14,25 +14,40 @@ import {
     Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { auth, db, storage } from '../firebase/config';
 import {
     doc,
     getDoc,
     setDoc,
-    collection,
-    onSnapshot,
-    query,
-    where,
-    orderBy,
-    getDocs,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '../firebase/config';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function ProfileScreen({ navigation }) {
-    const uid = auth.currentUser.uid;
+  //Track auth state
+    const [user, setUser] = useState(null);
+    const [initializing, setInitializing] = useState(true);
+    useEffect(() => {
+        const unsub = auth.onAuthStateChanged(u => {
+        setUser(u);
+        if (initializing) setInitializing(false);
+        });
+        return unsub;
+    }, []);
+    if (initializing) {
+        return (
+        <View style={styles.center}>
+            <ActivityIndicator size="large" />
+        </View>
+        );
+    }
+    if (!user) {
+        navigation.replace('Login');
+        return null;
+    }
+    const uid = user.uid;
 
-    // Profile fields
+    //Profile data state
     const [profile, setProfile] = useState({
         username: '',
         displayName: '',
@@ -45,20 +60,18 @@ export default function ProfileScreen({ navigation }) {
     const [newPhotoUri, setNewPhotoUri] = useState(null);
     const [saving, setSaving] = useState(false);
 
-    // Other lists: favorites, myEvents, myRsvps (omitted here but we will implement them later ofc :) )
-
-    // Fetch profile
+    //  Fetch profile from Firestore
     useEffect(() => {
         const refDoc = doc(db, 'users', uid, 'profile', 'info');
         getDoc(refDoc)
         .then(snap => {
             if (snap.exists()) setProfile(snap.data());
         })
-        .catch(err => console.warn('Error loading profile:', err))
+        .catch(console.warn)
         .finally(() => setLoadingProfile(false));
-    }, []);
+    }, [uid]);
 
-    // Pick a new profile photo
+    //  Pick a new photo
     const pickPhoto = async () => {
         const res = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -67,7 +80,7 @@ export default function ProfileScreen({ navigation }) {
         if (!res.cancelled) setNewPhotoUri(res.uri);
     };
 
-    // Save profile changes
+    //  Save profile changes
     const saveProfile = async () => {
         setSaving(true);
         try {
@@ -78,7 +91,6 @@ export default function ProfileScreen({ navigation }) {
             await uploadBytes(storageRef, blob);
             photoUrl = await getDownloadURL(storageRef);
         }
-
         const profileRef = doc(db, 'users', uid, 'profile', 'info');
         await setDoc(profileRef, {
             username:    profile.username,
@@ -87,7 +99,6 @@ export default function ProfileScreen({ navigation }) {
             pronouns:    profile.pronouns,
             photoUrl,
         });
-
         setProfile(prev => ({ ...prev, photoUrl }));
         setEditing(false);
         setNewPhotoUri(null);
@@ -112,20 +123,18 @@ export default function ProfileScreen({ navigation }) {
         <ScrollView contentContainerStyle={styles.container}>
         {/* Profile Photo */}
         <TouchableOpacity onPress={editing ? pickPhoto : null}>
+            {newPhotoUri || profile.photoUrl ? (
             <Image
-            source={
-                newPhotoUri
-                ? { uri: newPhotoUri }
-                : profile.photoUrl
-                ? { uri: profile.photoUrl }
-                : require('../../assets/default-avatar.png')
-            }
-            style={styles.avatar}
+                source={{ uri: newPhotoUri || profile.photoUrl }}
+                style={styles.avatar}
             />
+            ) : (
+            <View style={[styles.avatar, { backgroundColor: '#CCC' }]} />
+            )}
             {editing && <Text style={styles.changePhoto}>Change Photo</Text>}
         </TouchableOpacity>
 
-        {/* Display Name & Username */}
+        {/* Name & Username */}
         {editing ? (
             <>
             <TextInput
@@ -144,10 +153,10 @@ export default function ProfileScreen({ navigation }) {
         ) : (
             <>
             <Text style={styles.name}>
-                {profile.displayName || auth.currentUser.email}
+                {profile.displayName || user.email}
             </Text>
             <Text style={styles.username}>
-                @{profile.username || uid.substring(0, 6)}
+                @{profile.username || uid.slice(0, 6)}
             </Text>
             </>
         )}
@@ -178,7 +187,7 @@ export default function ProfileScreen({ navigation }) {
             </>
         )}
 
-        {/* Edit / Save Buttons */}
+        {/* Edit / Save */}
         {editing ? (
             <Button
             title={saving ? 'Saving…' : 'Save Profile'}
@@ -189,75 +198,27 @@ export default function ProfileScreen({ navigation }) {
             <Button title="Edit Profile" onPress={() => setEditing(true)} />
         )}
 
-        {/* Settings Button */}
+        {/* Settings */}
         <View style={styles.settingsButton}>
             <Button
             title="Settings"
             onPress={() => navigation.navigate('Settings')}
             />
         </View>
-
-        {/* Here you can render Favorites / My Events / My RSVPs lists below */}
         </ScrollView>
     );
     }
 
     const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        alignItems: 'center',
-    },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    avatar: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: '#ddd',
-    },
-    changePhoto: {
-        color: '#007AFF',
-        marginTop: 4,
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    name: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginTop: 12,
-    },
-    username: {
-        fontSize: 14,
-        color: '#555',
-        marginBottom: 12,
-    },
-    input: {
-        width: '100%',
-        borderBottomWidth: 1,
-        marginBottom: 12,
-        paddingVertical: 8,
-    },
-    textArea: {
-        width: '100%',
-        borderWidth: 1,
-        marginBottom: 12,
-        padding: 8,
-        height: 80,
-        textAlignVertical: 'top',
-    },
-    bio: {
-        fontSize: 16,
-        fontStyle: 'italic',
-        marginVertical: 8,
-        textAlign: 'center',
-    },
-    pronouns: {
-        fontSize: 14,
-        marginBottom: 12,
-        color: '#555',
-    },
-    settingsButton: {
-        marginTop: 24,
-        alignSelf: 'center',
-        width: '60%',
-    },
+    container:      { padding: 16, alignItems: 'center' },
+    center:         { flex:1, justifyContent:'center', alignItems:'center' },
+    avatar:         { width:120, height:120, borderRadius:60, backgroundColor:'#ddd' },
+    changePhoto:    { color:'#007AFF', marginTop:4, marginBottom:12, textAlign:'center' },
+    name:           { fontSize:20, fontWeight:'600', marginTop:12 },
+    username:       { fontSize:14, color:'#555', marginBottom:12 },
+    input:          { width:'100%', borderBottomWidth:1, marginBottom:12, paddingVertical:8 },
+    textArea:       { width:'100%', borderWidth:1, marginBottom:12, padding:8, height:80, textAlignVertical:'top' },
+    bio:            { fontSize:16, fontStyle:'italic', marginVertical:8, textAlign:'center' },
+    pronouns:       { fontSize:14, marginBottom:12, color:'#555' },
+    settingsButton: { marginTop:24, alignSelf:'center', width:'60%' },
 });
