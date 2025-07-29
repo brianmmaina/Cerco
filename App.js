@@ -1,67 +1,106 @@
 // App.js
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 
-import LoginScreen       from './src/screens/LoginScreen';
-import SignupScreen      from './src/screens/SignupScreen';
-import VerifyEmailScreen from './src/screens/VerifyEmailScreen';
-import HomeScreen        from './src/screens/HomeScreen';
-import CalendarScreen    from './src/screens/CalendarScreen';
-import FeedScreen        from './src/screens/FeedScreen';
+// Screens
+import CalendarScreen     from './src/screens/CalendarScreen';
+import FeedScreen         from './src/screens/FeedScreen';
+import MapScreen          from './src/screens/MapScreen';         
+import CreateEventScreen  from './src/screens/CreateEventScreen';
+import ProfileScreen      from './src/screens/ProfileScreen';   
 import EventDetailsScreen from './src/screens/EventDetailsScreen';
-import CreateEventScreen from './src/screens/CreateEventScreen';
 
-const Stack = createNativeStackNavigator();
+// Stacks
+const CalendarStack = createNativeStackNavigator();
+function CalendarStackScreen() {
+  return (
+    <CalendarStack.Navigator>
+      <CalendarStack.Screen 
+        name="CalendarMain" 
+        component={CalendarScreen} 
+        options={{ headerTitle: 'Calendar' }} 
+      />
+      <CalendarStack.Screen 
+        name="Details" 
+        component={EventDetailsScreen} 
+        options={{ title: 'Event Details' }} 
+      />
+    </CalendarStack.Navigator>
+  );
+}
+
+const FeedStack = createNativeStackNavigator();
+function FeedStackScreen() {
+  return (
+    <FeedStack.Navigator>
+      <FeedStack.Screen 
+        name="FeedMain" 
+        component={FeedScreen} 
+        options={{ headerTitle: 'Feed' }} 
+      />
+      <FeedStack.Screen 
+        name="Details" 
+        component={EventDetailsScreen} 
+        options={{ title: 'Event Details' }} 
+      />
+    </FeedStack.Navigator>
+  );
+}
+
+const CreateStack = createNativeStackNavigator();
+function CreateStackScreen() {
+  return (
+    <CreateStack.Navigator>
+      <CreateStack.Screen 
+        name="CreateMain" 
+        component={CreateEventScreen} 
+        options={{ headerTitle: 'Create Event' }} 
+      />
+    </CreateStack.Navigator>
+  );
+}
+
+const ProfileStack = createNativeStackNavigator();
+function ProfileStackScreen() {
+  return (
+    <ProfileStack.Navigator>
+      <ProfileStack.Screen 
+        name="ProfileMain" 
+        component={ProfileScreen} 
+        options={{ headerTitle: 'Profile' }} 
+      />
+    </ProfileStack.Navigator>
+  );
+}
+
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator 
-        // 👇 change this to Home to skip login flow
-        initialRouteName="Home"
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
+            if (route.name === 'Calendar') iconName = 'calendar';
+            else if (route.name === 'Feed') iconName = 'list';
+            else if (route.name === 'Map') iconName = 'map';
+            else if (route.name === 'Create') iconName = 'add-circle';
+            else if (route.name === 'Profile') iconName = 'person';
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+        })}
       >
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-          options={{ title: 'Log In' }}
-        />
-        <Stack.Screen 
-          name="Signup" 
-          component={SignupScreen} 
-          options={{ title: 'Sign Up' }}
-        />
-        <Stack.Screen 
-          name="VerifyEmail" 
-          component={VerifyEmailScreen} 
-          options={{ title: 'Verify Email' }}
-        />
-        <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Calendar" 
-          component={CalendarScreen} 
-          options={{ title: 'Calendar' }}
-        />
-        <Stack.Screen 
-          name="Feed" 
-          component={FeedScreen} 
-          options={{ title: 'Feed' }}
-        />
-        <Stack.Screen 
-        name="Details" 
-        component={EventDetailsScreen} 
-        options={{ title: 'Event Details' }}
-        />
-        <Stack.Screen 
-        name="Create" 
-        component={CreateEventScreen} 
-        options={{ title: 'Create Event' }}
-        />
-      </Stack.Navigator>
+        <Tab.Screen name="Calendar" component={CalendarStackScreen} />
+        <Tab.Screen name="Feed"     component={FeedStackScreen}     />
+        <Tab.Screen name="Map"      component={MapScreen}            />
+        <Tab.Screen name="Create"   component={CreateStackScreen}    />
+        <Tab.Screen name="Profile"  component={ProfileStackScreen}   />
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }
