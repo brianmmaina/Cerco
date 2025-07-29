@@ -11,9 +11,10 @@ import FeedScreen         from './src/screens/FeedScreen';
 import MapScreen          from './src/screens/MapScreen';         
 import CreateEventScreen  from './src/screens/CreateEventScreen';
 import ProfileScreen      from './src/screens/ProfileScreen';   
+import SettingsScreen     from './src/screens/SettingsScreen';
 import EventDetailsScreen from './src/screens/EventDetailsScreen';
 
-// Stacks
+// Calendar stack
 const CalendarStack = createNativeStackNavigator();
 function CalendarStackScreen() {
   return (
@@ -32,6 +33,7 @@ function CalendarStackScreen() {
   );
 }
 
+// Feed stack
 const FeedStack = createNativeStackNavigator();
 function FeedStackScreen() {
   return (
@@ -50,6 +52,7 @@ function FeedStackScreen() {
   );
 }
 
+// Create stack
 const CreateStack = createNativeStackNavigator();
 function CreateStackScreen() {
   return (
@@ -63,6 +66,7 @@ function CreateStackScreen() {
   );
 }
 
+// Profile stack
 const ProfileStack = createNativeStackNavigator();
 function ProfileStackScreen() {
   return (
@@ -71,6 +75,11 @@ function ProfileStackScreen() {
         name="ProfileMain" 
         component={ProfileScreen} 
         options={{ headerTitle: 'Profile' }} 
+      />
+      <ProfileStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ headerTitle: 'Settings' }}
       />
     </ProfileStack.Navigator>
   );
