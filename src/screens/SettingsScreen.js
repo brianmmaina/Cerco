@@ -3,13 +3,13 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import { auth } from '../firebase/config';
+import { colors, spacing, typography } from '../theme';
 
-export default function SettingsScreen({ navigation }) {
+export default function SettingsScreen() {
     const signOut = async () => {
         try {
         await auth.signOut();
-        // After sign out, send user back to the login flow or calendar
-        navigation.replace('Calendar');
+        // Root auth listener will handle navigation back to login
         } catch (e) {
         Alert.alert('Error', 'Could not sign out.');
         }
@@ -18,17 +18,34 @@ export default function SettingsScreen({ navigation }) {
     return (
         <View style={styles.container}>
         <Text style={styles.header}>Settings</Text>
-        <Button
+        <View style={styles.button}>
+            <Button
             title="Sign Out"
             onPress={signOut}
-            color="red"
-        />
-        {/* You can add more settings options here */}
+            color={colors.error}
+            />
+        </View>
+        {/* Additional settings options can go here */}
         </View>
     );
     }
 
     const styles = StyleSheet.create({
-    container: { flex:1, padding:16, justifyContent:'center' },
-    header: { fontSize:20, fontWeight:'600', marginBottom:24 },
+    container: {
+        flex: 1,
+        padding: spacing.medium,
+        justifyContent: 'center',
+        backgroundColor: colors.background,
+    },
+    header: {
+        ...typography.h2,
+        marginBottom: spacing.large,
+        color: colors.text,
+        textAlign: 'center',
+    },
+    button: {
+        width: '80%',
+        alignSelf: 'center',
+        marginVertical: spacing.small,
+    },
 });

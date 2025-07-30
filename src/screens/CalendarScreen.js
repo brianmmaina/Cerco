@@ -1,4 +1,5 @@
 // src/screens/CalendarScreen.js
+
 import React, { useEffect, useState } from 'react';
 import {
     View,
@@ -6,27 +7,25 @@ import {
     Text,
     StyleSheet,
     Dimensions,
-    TouchableOpacity
+    TouchableOpacity,
 } from 'react-native';
 import { CalendarList } from 'react-native-calendars';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { colors, spacing, typography } from '../theme';
 
 export default function CalendarScreen({ navigation }) {
     const [events, setEvents] = useState([]);
     const [selectedDate, setSelectedDate] = useState(getToday());
 
-    // Real-time listener for all events
     useEffect(() => {
         const q = query(collection(db, 'events'));
         const unsub = onSnapshot(q, snap => {
-        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setEvents(docs);
+        setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         });
         return unsub;
     }, []);
 
-    // Auto-reset selectedDate at midnight
     useEffect(() => {
         const now = new Date();
         const msUntilMidnight =
@@ -37,22 +36,21 @@ export default function CalendarScreen({ navigation }) {
         return () => clearTimeout(timeout);
     }, [selectedDate]);
 
-    // Build markedDates object
     const baseMarked = {
         [selectedDate]: {
         selected: true,
-        selectedColor: '#007AFF',
+        selectedColor: colors.primary,
         },
     };
+
     const markedDates = events.reduce((acc, evt) => {
-        const date = evt.date; // "YYYY-MM-DD"
+        const date = evt.date;
         if (!acc[date]) {
-        acc[date] = { marked: true, dotColor: '#2196F3' };
+        acc[date] = { marked: true, dotColor: colors.secondary };
         }
         return acc;
     }, baseMarked);
 
-    // Filter events for the selected day
     const dailyEvents = events.filter(evt => evt.date === selectedDate);
 
     return (
@@ -91,31 +89,42 @@ export default function CalendarScreen({ navigation }) {
     );
     }
 
-    // Helper to format today as YYYY-MM-DD
     function getToday() {
     return new Date().toISOString().split('T')[0];
     }
 
     const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
+    container: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
     heading: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginHorizontal: 16,
-        marginTop: 16,
+        ...typography.h2,
+        marginHorizontal: spacing.medium,
+        marginTop: spacing.large,
     },
     card: {
-        marginHorizontal: 16,
-        marginVertical: 8,
-        padding: 12,
-        backgroundColor: '#f9f9f9',
+        marginHorizontal: spacing.medium,
+        marginVertical: spacing.small,
+        padding: spacing.medium,
+        backgroundColor: colors.surface,
         borderRadius: 6,
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
     },
-    title: { fontSize: 16, fontWeight: '500' },
-    meta: { color: '#555', marginTop: 4 },
-    empty: { textAlign: 'center', marginTop: 32, color: '#888' },
-    });
+    title: {
+        ...typography.body,
+        fontWeight: '500',
+    },
+    meta: {
+        ...typography.caption,
+        marginTop: spacing.tiny,
+    },
+    empty: {
+        textAlign: 'center',
+        marginTop: spacing.large,
+        color: colors.muted,
+    },
+});

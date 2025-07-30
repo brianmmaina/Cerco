@@ -1,12 +1,20 @@
 // src/screens/SignupScreen.js
 
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
-import { 
-    createUserWithEmailAndPassword, 
-    sendEmailVerification 
+import {
+    View,
+    TextInput,
+    Button,
+    Text,
+    Alert,
+    StyleSheet,
+} from 'react-native';
+import {
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
+import { colors, spacing, typography } from '../theme';
 
 export default function SignupScreen({ navigation }) {
     const [email, setEmail]       = useState('');
@@ -16,29 +24,29 @@ export default function SignupScreen({ navigation }) {
     const signup = async () => {
         setError('');
         const trimmed = email.trim().toLowerCase();
-        // Require @bu.edu email
         if (!trimmed.endsWith('@bu.edu')) {
         return setError('Please use your @bu.edu email address.');
         }
-
         try {
-        // Create account
-        const cred = await createUserWithEmailAndPassword(auth, trimmed, password);
-
-        // Send verification email
+        const cred = await createUserWithEmailAndPassword(
+            auth,
+            trimmed,
+            password
+        );
         await sendEmailVerification(cred.user);
-
-        // Move to verification screen
         navigation.replace('VerifyEmail');
         } catch (e) {
-        // Simplify Firebase error codes
-        const msg = e.message.includes('auth/') ? e.message.split('auth/')[1] : e.message;
+        const msg = e.message.includes('auth/')
+            ? e.message.split('auth/')[1]
+            : e.message;
         setError(msg.replace(/[-_]/g, ' '));
         }
     };
 
     return (
         <View style={styles.container}>
+        <Text style={styles.title}>Create an Account</Text>
+
         <TextInput
             placeholder="Student Email (@bu.edu)"
             value={email}
@@ -55,25 +63,44 @@ export default function SignupScreen({ navigation }) {
             style={styles.input}
         />
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Button title="Sign Up" onPress={signup} />
+        <View style={styles.button}>
+            <Button
+            title="Sign Up"
+            onPress={signup}
+            color={colors.primary}
+            />
+        </View>
         </View>
     );
-}
+    }
 
-const styles = StyleSheet.create({
+    const styles = StyleSheet.create({
     container: {
-        flex: 1, 
-        justifyContent: 'center', 
-        padding: 16,
+        flex:           1,
+        justifyContent: 'center',
+        padding:        spacing.medium,
+        backgroundColor: colors.background,
+    },
+    title: {
+        ...typography.h2,
+        textAlign:    'center',
+        marginBottom: spacing.large,
+        color:        colors.text,
     },
     input: {
-        marginBottom: 12,
         borderBottomWidth: 1,
-        padding: 8,
+        borderBottomColor: colors.muted,
+        marginBottom:      spacing.medium,
+        paddingVertical:   spacing.small,
+        color:             colors.text,
     },
     errorText: {
-        color: 'red',
-        marginBottom: 12,
-        textAlign: 'center',
+        ...typography.caption,
+        color:        colors.error,
+        marginBottom: spacing.medium,
+        textAlign:    'center',
+    },
+    button: {
+        marginTop: spacing.small,
     },
 });

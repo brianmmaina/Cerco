@@ -2,52 +2,28 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    Image,
-    Button,
-    TouchableOpacity,
-    StyleSheet,
-    ActivityIndicator,
-    ScrollView,
-    Alert,
+  View,
+  Text,
+  TextInput,
+  Image,
+  Button,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { auth, db, storage } from '../firebase/config';
-import {
-    doc,
-    getDoc,
-    setDoc,
-} from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
+import { colors, spacing, typography } from '../theme';
 
 export default function ProfileScreen({ navigation }) {
-  //Track auth state
     const [user, setUser] = useState(null);
     const [initializing, setInitializing] = useState(true);
-    useEffect(() => {
-        const unsub = auth.onAuthStateChanged(u => {
-        setUser(u);
-        if (initializing) setInitializing(false);
-        });
-        return unsub;
-    }, []);
-    if (initializing) {
-        return (
-        <View style={styles.center}>
-            <ActivityIndicator size="large" />
-        </View>
-        );
-    }
-    if (!user) {
-        navigation.replace('Login');
-        return null;
-    }
-    const uid = user.uid;
 
-    //Profile data state
     const [profile, setProfile] = useState({
         username: '',
         displayName: '',
@@ -60,18 +36,25 @@ export default function ProfileScreen({ navigation }) {
     const [newPhotoUri, setNewPhotoUri] = useState(null);
     const [saving, setSaving] = useState(false);
 
-    //  Fetch profile from Firestore
     useEffect(() => {
-        const refDoc = doc(db, 'users', uid, 'profile', 'info');
+        const unsub = auth.onAuthStateChanged(u => {
+        setUser(u);
+        if (initializing) setInitializing(false);
+        });
+        return unsub;
+    }, [initializing]);
+
+    useEffect(() => {
+        if (!user) return;
+        const refDoc = doc(db, 'users', user.uid, 'profile', 'info');
         getDoc(refDoc)
         .then(snap => {
             if (snap.exists()) setProfile(snap.data());
         })
         .catch(console.warn)
         .finally(() => setLoadingProfile(false));
-    }, [uid]);
+    }, [user]);
 
-    //  Pick a new photo
     const pickPhoto = async () => {
         const res = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -80,18 +63,17 @@ export default function ProfileScreen({ navigation }) {
         if (!res.cancelled) setNewPhotoUri(res.uri);
     };
 
-    //  Save profile changes
     const saveProfile = async () => {
         setSaving(true);
         try {
         let photoUrl = profile.photoUrl;
         if (newPhotoUri) {
             const blob = await (await fetch(newPhotoUri)).blob();
-            const storageRef = ref(storage, `profiles/${uid}/${uuidv4()}`);
+            const storageRef = ref(storage, `profiles/${user.uid}/${uuidv4()}`);
             await uploadBytes(storageRef, blob);
             photoUrl = await getDownloadURL(storageRef);
         }
-        const profileRef = doc(db, 'users', uid, 'profile', 'info');
+        const profileRef = doc(db, 'users', user.uid, 'profile', 'info');
         await setDoc(profileRef, {
             username:    profile.username,
             displayName: profile.displayName,
@@ -99,29 +81,39 @@ export default function ProfileScreen({ navigation }) {
             pronouns:    profile.pronouns,
             photoUrl,
         });
-        setProfile(prev => ({ ...prev, photoUrl }));
+        setProfile(p => ({ ...p, photoUrl }));
         setEditing(false);
         setNewPhotoUri(null);
         Alert.alert('Profile saved!');
         } catch (e) {
-        console.warn('Save profile error:', e);
+        console.warn(e);
         Alert.alert('Error', 'Could not save profile.');
         } finally {
         setSaving(false);
         }
     };
 
+    if (initializing) {
+        return (
+        <View style={styles.center}>
+            <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+        );
+    }
+    if (!user) {
+        navigation.replace('Login');
+        return null;
+    }
     if (loadingProfile) {
         return (
         <View style={styles.center}>
-            <ActivityIndicator size="large" />
+            <ActivityIndicator size="large" color={colors.primary} />
         </View>
         );
     }
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-        {/* Profile Photo */}
         <TouchableOpacity onPress={editing ? pickPhoto : null}>
             {newPhotoUri || profile.photoUrl ? (
             <Image
@@ -129,41 +121,28 @@ export default function ProfileScreen({ navigation }) {
                 style={styles.avatar}
             />
             ) : (
-            <View style={[styles.avatar, { backgroundColor: '#CCC' }]} />
+            <View style={[styles.avatar, { backgroundColor: colors.muted }]} />
             )}
             {editing && <Text style={styles.changePhoto}>Change Photo</Text>}
         </TouchableOpacity>
 
-        {/* Name & Username */}
         {editing ? (
             <>
+            <Text style={styles.label}>Username</Text>
             <TextInput
                 placeholder="Username"
                 value={profile.username}
                 onChangeText={t => setProfile(p => ({ ...p, username: t }))}
                 style={styles.input}
             />
+            <Text style={styles.label}>Display Name</Text>
             <TextInput
                 placeholder="Display Name"
                 value={profile.displayName}
                 onChangeText={t => setProfile(p => ({ ...p, displayName: t }))}
                 style={styles.input}
             />
-            </>
-        ) : (
-            <>
-            <Text style={styles.name}>
-                {profile.displayName || user.email}
-            </Text>
-            <Text style={styles.username}>
-                @{profile.username || uid.slice(0, 6)}
-            </Text>
-            </>
-        )}
-
-        {/* Bio & Pronouns */}
-        {editing ? (
-            <>
+            <Text style={styles.label}>Bio</Text>
             <TextInput
                 placeholder="Bio"
                 value={profile.bio}
@@ -171,6 +150,7 @@ export default function ProfileScreen({ navigation }) {
                 style={styles.textArea}
                 multiline
             />
+            <Text style={styles.label}>Pronouns</Text>
             <TextInput
                 placeholder="Pronouns"
                 value={profile.pronouns}
@@ -180,29 +160,43 @@ export default function ProfileScreen({ navigation }) {
             </>
         ) : (
             <>
-            {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
-            {profile.pronouns ? (
+            <Text style={styles.name}>
+                {profile.displayName || user.email}
+            </Text>
+            <Text style={styles.username}>
+                @{profile.username || user.uid.slice(0, 6)}
+            </Text>
+            {profile.bio && <Text style={styles.bio}>{profile.bio}</Text>}
+            {profile.pronouns && (
                 <Text style={styles.pronouns}>{profile.pronouns}</Text>
-            ) : null}
+            )}
             </>
         )}
 
-        {/* Edit / Save */}
         {editing ? (
+            <View style={styles.button}>
             <Button
-            title={saving ? 'Saving…' : 'Save Profile'}
-            onPress={saveProfile}
-            disabled={saving}
+                title={saving ? 'Saving…' : 'Save Profile'}
+                onPress={saveProfile}
+                disabled={saving}
+                color={colors.primary}
             />
+            </View>
         ) : (
-            <Button title="Edit Profile" onPress={() => setEditing(true)} />
+            <View style={styles.button}>
+            <Button
+                title="Edit Profile"
+                onPress={() => setEditing(true)}
+                color={colors.primary}
+            />
+            </View>
         )}
 
-        {/* Settings */}
-        <View style={styles.settingsButton}>
+        <View style={styles.button}>
             <Button
             title="Settings"
             onPress={() => navigation.navigate('Settings')}
+            color={colors.secondary}
             />
         </View>
         </ScrollView>
@@ -210,15 +204,77 @@ export default function ProfileScreen({ navigation }) {
     }
 
     const styles = StyleSheet.create({
-    container:      { padding: 16, alignItems: 'center' },
-    center:         { flex:1, justifyContent:'center', alignItems:'center' },
-    avatar:         { width:120, height:120, borderRadius:60, backgroundColor:'#ddd' },
-    changePhoto:    { color:'#007AFF', marginTop:4, marginBottom:12, textAlign:'center' },
-    name:           { fontSize:20, fontWeight:'600', marginTop:12 },
-    username:       { fontSize:14, color:'#555', marginBottom:12 },
-    input:          { width:'100%', borderBottomWidth:1, marginBottom:12, paddingVertical:8 },
-    textArea:       { width:'100%', borderWidth:1, marginBottom:12, padding:8, height:80, textAlignVertical:'top' },
-    bio:            { fontSize:16, fontStyle:'italic', marginVertical:8, textAlign:'center' },
-    pronouns:       { fontSize:14, marginBottom:12, color:'#555' },
-    settingsButton: { marginTop:24, alignSelf:'center', width:'60%' },
+    container: {
+        padding:    spacing.medium,
+        alignItems: 'center',
+        backgroundColor: colors.background,
+    },
+    center: {
+        flex:           1,
+        justifyContent: 'center',
+        alignItems:     'center',
+        backgroundColor: colors.background,
+    },
+    avatar: {
+        width:        120,
+        height:       120,
+        borderRadius: 60,
+        backgroundColor: colors.muted,
+    },
+    changePhoto: {
+        color:          colors.primary,
+        marginTop:      spacing.small,
+        marginBottom:   spacing.small,
+    },
+    label: {
+        ...typography.body,
+        alignSelf: 'flex-start',
+        marginTop: spacing.medium,
+        marginBottom: spacing.tiny,
+        color: colors.text,
+    },
+    input: {
+        width:             '100%',
+        borderBottomWidth: 1,
+        borderBottomColor: colors.muted,
+        marginBottom:      spacing.medium,
+        paddingVertical:   spacing.small,
+        color:             colors.text,
+    },
+    textArea: {
+        width:             '100%',
+        borderWidth:       1,
+        borderColor:       colors.muted,
+        marginBottom:      spacing.medium,
+        padding:           spacing.small,
+        height:            80,
+        textAlignVertical: 'top',
+        color:             colors.text,
+    },
+    name: {
+        ...typography.h2,
+        marginTop:    spacing.medium,
+        color:        colors.text,
+    },
+    username: {
+        ...typography.body,
+        color:      colors.muted,
+        marginBottom: spacing.medium,
+    },
+    bio: {
+        ...typography.body,
+        fontStyle:  'italic',
+        textAlign:  'center',
+        marginBottom: spacing.small,
+        color:      colors.text,
+    },
+    pronouns: {
+        ...typography.body,
+        marginBottom: spacing.medium,
+        color:      colors.text,
+    },
+    button: {
+        width:      '80%',
+        marginVertical: spacing.small,
+    },
 });
