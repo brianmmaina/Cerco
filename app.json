@@ -14,18 +14,26 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Cerco needs your location to show nearby events on the map"
-      }
+        "NSLocationWhenInUseUsageDescription": "Cerco needs your location to show nearby events on the map",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.bmmaina.Cerco"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.bmmaina.Cerco"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f77f6860-f041-4352-a098-532e504945c0"
+      }
     }
   }
 }
