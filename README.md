@@ -1,3 +1,18 @@
+[![License](https://img.shields.io/github/license/brianmmaina/cerco)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/brianmmaina/cerco)](https://github.com/brianmmaina/cerco/commits/main)
+[![Stars](https://img.shields.io/github/stars/brianmmaina/cerco?style=social)](https://github.com/brianmmaina/cerco/stargazers)
+[![Issues](https://img.shields.io/github/issues/brianmmaina/cerco)](https://github.com/brianmmaina/cerco/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/brianmmaina/cerco)](https://github.com/brianmmaina/cerco/pulls)
+[![Top Language](https://img.shields.io/github/languages/top/brianmmaina/cerco)](https://github.com/brianmmaina/cerco)
+[![Repo Size](https://img.shields.io/github/repo-size/brianmmaina/cerco)](https://github.com/brianmmaina/cerco)
+[![Code Size](https://img.shields.io/github/languages/code-size/brianmmaina/cerco)](https://github.com/brianmmaina/cerco)
+
+[![React Native](https://img.shields.io/badge/Frontend-React%20Native-61DAFB?logo=react)](https://reactnative.dev/)
+[![Firebase](https://img.shields.io/badge/Backend-Firebase-FFCA28?logo=firebase)](https://firebase.google.com/)
+[![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Expo](https://img.shields.io/badge/Framework-Expo-000020?logo=expo)](https://expo.dev/)
+
+
 # Cerco
 Cerco is a student event app tailored for Boston area campuses. It helps students find, create, and engage with campus events through calendar, feed, and map views while everything updates in real time.
 
